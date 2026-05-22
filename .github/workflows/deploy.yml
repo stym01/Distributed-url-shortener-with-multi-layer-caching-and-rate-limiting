@@ -11,16 +11,27 @@ jobs:
     steps:
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
+        # 1. Define the secrets as environment variables for this step
+        env:
+          PORT: ${{ secrets.PROD_PORT }}
+          BASE_URL: ${{ secrets.PROD_BASE_URL }}
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          REDIS_URL: ${{ secrets.PROD_REDIS_URL }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          # 2. Pass those variables into the SSH script
+          envs: PORT,BASE_URL,DATABASE_URL,REDIS_URL
           script: |
-            # Navigate to the project folder (ensure this matches your repo name exactly)
             cd ~/Distributed-url-shortener-with-multi-layer-caching-and-rate-limiting
-            
-            # Pull the latest code
             git pull origin main
             
-            # Rebuild and restart the containers silently
+            # 3. Dynamically generate the .env file on the server
+            echo "PORT=$PORT" > .env
+            echo "BASE_URL=$BASE_URL" >> .env
+            echo "DATABASE_URL=$DATABASE_URL" >> .env
+            echo "REDIS_URL=$REDIS_URL" >> .env
+            
+            # 4. Boot up the Docker containers
             docker compose up -d --build
