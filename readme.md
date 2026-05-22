@@ -29,7 +29,7 @@ It also features a custom Token-Bucket rate-limiting algorithm to prevent abuse 
 * **Token-Bucket Rate Limiting**: Implements algorithmic traffic control to throttle high-concurrency requests and protect the system from DDoS attacks.
 * **Database Persistence**: PostgreSQL is used as the ultimate source of truth, storing all URL mappings safely on disk.
 * **Instant QR Generation**: Converts generated short links directly into Base64 image strings on the fly, eliminating the need to store image files on a server.
-* **Serverless Frontend**: The UI is built using vanilla HTML/CSS with a glassmorphism design, optimized for instantaneous page loads.
+* **Serverless Frontend**: The UI is built using HTML/CSS, optimized for instantaneous page loads.
 
 ## System Architecture
 
