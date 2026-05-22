@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortify | High-Performance URL Shortener</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-base: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+
+            padding: 1rem 1rem 3rem 1rem; 
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .orb {
+            position: fixed; 
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            z-index: 0;
+            animation: float 10s infinite alternate ease-in-out;
+        }
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: #3b82f6;
+            top: -50px;
+            left: -50px;
+        }
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: #8b5cf6;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(30px, 50px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+
+            padding: 2rem 2rem 1.5rem 2rem; 
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px; 
+            text-align: center;
+            margin: auto; 
+        }
+
+        h1 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1.8rem; 
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.25rem; 
+            font-weight: 300;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 0.85rem 1rem; /* Tighter padding */
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input[type="url"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        input[type="url"]::placeholder {
+            color: #64748b;
+        }
+
+        button.main-btn {
+            width: 100%;
+            padding: 0.85rem; 
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        }
+
+        button.main-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        button.main-btn:active {
+            transform: translateY(0);
+        }
+
+        button.main-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #result-section {
+            display: none;
+            margin-top: 1.25rem; 
+            animation: slideUp 0.4s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .short-url-box {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.6rem 0.8rem;
+            border-radius: 12px;
+            border: 1px dashed #3b82f6;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .short-url-box a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            word-break: break-all;
+            text-align: left;
+            transition: color 0.2s;
+        }
+
+        .short-url-box a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        button.copy-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        button.copy-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .qr-container {
+            background: white;
+            padding: 0.4rem;
+            border-radius: 12px;
+            display: inline-block;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        img#qr-code {
+            max-width: 110px; 
+            display: block;
+            border-radius: 8px;
+        }
+
+        .error {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .brand-footer {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--card-border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .brand-footer a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .brand-footer a:hover {
+            color: #f8fafc;
+        }
+
+        .infra-badge {
+            position: absolute;
+            bottom: -28px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+        
+        .infra-badge span {
+            color: #10b981; 
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem 1.5rem 1.25rem 1.5rem;
+            }
+            h1 { font-size: 1.6rem; }
+            .short-url-box {
+                flex-direction: column;
+                text-align: center;
+            }
+            .short-url-box a {
+                text-align: center;
+            }
+            button.copy-btn {
+                width: 100%;
+                padding: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        <h1>Shortify</h1>
+        <p class="subtitle">Lightning-fast, distributed URL caching.</p>
+
+        <form id="shorten-form">
+            <div class="input-group">
+                <input type="url" id="long-url" placeholder="Paste your long URL here..." required autocomplete="off">
+            </div>
+            <button class="main-btn" type="submit" id="submit-btn">Generate Short Link</button>
+        </form>
+
+        <div id="error-msg" class="error"></div>
+
+        <div id="result-section">
+            <div class="short-url-box">
+                <a id="short-url-link" href="#" target="_blank"></a>
+                <button class="copy-btn" id="copy-btn" type="button" onclick="copyToClipboard()">Copy</button>
+            </div>
+            <p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">Scan to visit</p>
+            <div class="qr-container">
+                <img id="qr-code" src="" alt="QR Code">
+            </div>
+        </div>
+
+        <div class="brand-footer">
+            <div>Token-Bucket Rate Limiting &bull; Multi-Layer Caching</div>
+            <div>Engineered by Satyam &bull; <a href="https://github.com/stym01" target="_blank">github.com/stym01</a></div>
+        </div>
+        
+        <div class="infra-badge">
+            <span>●</span> Live on AWS EC2
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('shorten-form');
+        const urlInput = document.getElementById('long-url');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultSection = document.getElementById('result-section');
+        const shortUrlLink = document.getElementById('short-url-link');
+        const qrCodeImg = document.getElementById('qr-code');
+        const errorMsg = document.getElementById('error-msg');
+        const copyBtn = document.getElementById('copy-btn');
+
+        const API_URL = 'http://100.53.37.203:3000/api/shorten'; 
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            errorMsg.style.display = 'none';
+            resultSection.style.display = 'none';
+            submitBtn.textContent = 'Processing...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ original_url: urlInput.value })
+                });
+
+                const json = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(json.error || 'Failed to shorten URL');
+                }
+
+                shortUrlLink.href = json.data.short_url;
+                shortUrlLink.textContent = json.data.short_url.replace(/^https?:\/\//, ''); // Clean up display
+                qrCodeImg.src = json.data.qr_code;
+                
+                copyBtn.textContent = 'Copy';
+                copyBtn.style.color = '';
+                copyBtn.style.borderColor = '';
+                
+                resultSection.style.display = 'block';
+                urlInput.value = ''; 
+
+            } catch (err) {
+                errorMsg.textContent = err.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                submitBtn.textContent = 'Generate Short Link';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(shortUrlLink.href).then(() => {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.style.color = '#10b981';
+                copyBtn.style.borderColor = '#10b981';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.style.color = '';
+                    copyBtn.style.borderColor = '';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
